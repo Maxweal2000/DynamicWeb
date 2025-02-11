@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./styles.css"; // Add your styles
 
 const App = () => {
-  const [user, setUser] = useState("user1"); // Default logged-in user
+  const [user] = useState("user1"); // Default logged-in user
   const [userJokes, setUserJokes] = useState(() => {
     // Retrieve user jokes from localStorage on initial load
     const savedJokes = localStorage.getItem("userJokes");
