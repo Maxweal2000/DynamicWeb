@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import Joke from './components/joke';
-import AddJoke from './components/addJoke';
-import Location from './components/location';
-import Camera from './components/camera';
+import AddJoke from './components/AddJoke';
+import Location from './components/Location';
+import Camera from './components/Camera';
 
 const App = () => {
   const [joke, setJoke] = useState("");
