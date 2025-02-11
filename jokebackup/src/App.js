@@ -66,7 +66,7 @@ const App = () => {
       canvas.height = video.videoHeight;
       canvas.getContext("2d").drawImage(video, 0, 0);
       setImage(canvas.toDataURL("image/png")); // Store captured image
-      video.srcObject.getTracks().forEach(track => track.stop()); // Stop the video stream after capture
+      video.srcObject.getTracks().forEach((track) => track.stop()); // Stop the video stream after capture
     };
   };
 
@@ -111,13 +111,17 @@ const App = () => {
       {userJokes.length > 0 && (
         <div className="w-80 bg-white shadow-lg rounded-2xl p-6 text-center">
           <h2 className="text-xl font-semibold text-gray-800">
-            {showAnswer ? userJokes[currentIndex].answer : userJokes[currentIndex].question}
+            {showAnswer
+              ? userJokes[currentIndex].answer
+              : userJokes[currentIndex].question}
           </h2>
         </div>
       )}
 
       {/* Display message if no jokes available */}
-      {userJokes.length === 0 && <div>No jokes available. Create your first joke!</div>}
+      {userJokes.length === 0 && (
+        <div>No jokes available. Create your first joke!</div>
+      )}
 
       {/* Buttons for next joke and show/hide answer */}
       <div className="mt-4 flex gap-4">
@@ -176,7 +180,10 @@ const App = () => {
           <h3 className="text-lg font-semibold mb-4">Your Jokes</h3>
           <ul>
             {userJokes.map((joke, index) => (
-              <li key={index} className="flex justify-between items-center mb-2">
+              <li
+                key={index}
+                className="flex justify-between items-center mb-2"
+              >
                 <span>{joke.question}</span>
                 <button
                   className="ml-4 text-red-500 hover:text-red-700"
@@ -207,15 +214,19 @@ const App = () => {
 
       {/* Display Captured Image */}
       {image && (
-        <div className="mt-4 bg-red-600 shadow-lg rounded-2xl p-6 text-center">
-          <h3 className="text-lg font-semibold mb-4 text-black">Captured Image</h3>
-          <img src={image} alt="Captured" className="w-64 h-64 object-cover rounded-full" />
+        <div className="mt-4 bg-white shadow-lg rounded-2xl p-6 text-center">
+          <h3 className="text-lg font-semibold mb-4">Captured Image</h3>
+          <img
+            src={image}
+            alt="Captured"
+            className="w-64 h-64 object-cover rounded-full"
+          />
         </div>
       )}
 
       {/* Button to capture image */}
       <button
-        className="mt-4 px-6 py-2 bg-red-600 text-black rounded-lg shadow-md hover:bg-red-700"
+        className="mt-4 px-6 py-2 bg-purple-500 text-white rounded-lg shadow-md hover:bg-purple-600"
         onClick={handleCaptureImage}
       >
         Capture Image
