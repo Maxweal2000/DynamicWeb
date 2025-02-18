@@ -17,11 +17,9 @@ enter a question and answer of your joke
 Click the "Submit Joke" button to add a new joke.
 
 3.0 Edit or Delete Jokes:
-
 Edit or delete your saved jokes by selecting them from the list.
 
-Capture a Selfie:
-
+4.0 Capture a Selfie:
 Click "Start Camera" and "Capture Image" to capture a photo using your camera.
 
 # React + Vite
@@ -31,7 +29,7 @@ Currently, two official plugins are available:
 @vitejs/plugin-react uses Babel for Fast Refresh.
 @vitejs/plugin-react-swc uses SWC for Fast Refresh.
 
-#Installation
+# Installation
 1. Install Node.js
 Download and install Node.js (Recommended version is the LTS version).
 
