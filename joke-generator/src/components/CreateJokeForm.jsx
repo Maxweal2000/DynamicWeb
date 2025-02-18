@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const CreateJokeForm = ({ addJoke, initialJoke = { question: "", answer: "" }, isEditing = false }) => {
+const CreateJokeForm = ({ addJoke, initialJoke = { question: "", answer: "" },isEditing = false }) => {
   const [joke, setJoke] = useState(initialJoke);
 
   const handleSubmit = () => {
