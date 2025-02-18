@@ -1,33 +1,36 @@
 import React, { useState, useEffect } from "react";
-import "./styles.css"; // Add your styles
+import JokeDisplay from "./components/JokeDisplay";
+import CreateJokeForm from "./components/CreateJokeForm";
+import UserJokes from "./components/UserJokes";
+import LocationDisplay from "./components/LocationDisplay";
+import CameraCapture from "./components/CameraCapture";
+import "./styles.css";
 
 const App = () => {
-  const [user] = useState("user1"); // Default logged-in user
+  // 1️⃣ State for managing user and jokes
+  const [user] = useState("user1"); // Default user
   const [userJokes, setUserJokes] = useState(() => {
-    // Retrieve user jokes from localStorage on initial load
     const savedJokes = localStorage.getItem("userJokes");
     return savedJokes ? JSON.parse(savedJokes) : [];
   });
-  const [currentIndex, setCurrentIndex] = useState(0); // Current joke index
-  const [showAnswer, setShowAnswer] = useState(false); // To toggle showing the answer
-  const [newJoke, setNewJoke] = useState({ question: "", answer: "" }); // For creating new jokes
-  const [isCreating, setIsCreating] = useState(false); // To track if the user is creating a new joke
 
-  // Geolocation State
-  const [location, setLocation] = useState(null); // Store the user's location
-  const [error, setError] = useState(null); // Store any error from Geolocation API
+  // 2️⃣ State for controlling joke display
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [showAnswer, setShowAnswer] = useState(false);
 
-  // Camera State
-  const [image, setImage] = useState(null); // Store the image captured from the camera
+  // 3️⃣ State for editing jokes
+  const [editingJoke, setEditingJoke] = useState(null); // Tracks the joke being edited
 
-  // Update localStorage whenever the user jokes change
+  // 4️⃣ State for location tracking
+  const [location, setLocation] = useState(null);
+  const [geoError, setGeoError] = useState(null);
+
+  // 5️⃣ Save jokes to localStorage whenever they change
   useEffect(() => {
-    if (userJokes.length > 0) {
-      localStorage.setItem("userJokes", JSON.stringify(userJokes));
-    }
+    localStorage.setItem("userJokes", JSON.stringify(userJokes));
   }, [userJokes]);
 
-  // Get User's Location using Geolocation API
+  // 6️⃣ Retrieve User's Location
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -37,189 +40,80 @@ const App = () => {
             longitude: position.coords.longitude,
           });
         },
-        (err) => {
-          setError("Unable to retrieve your location.");
+        () => {
+          setGeoError("Unable to retrieve your location.");
         }
       );
     } else {
-      setError("Geolocation is not supported by this browser.");
+      setGeoError("Geolocation is not supported.");
     }
   }, []);
 
-  // Function to handle image capture from camera
-  const handleCaptureImage = () => {
-    const video = document.createElement("video");
-    const canvas = document.createElement("canvas");
-    const videoConstraints = { video: { facingMode: "user" } };
-
-    navigator.mediaDevices
-      .getUserMedia(videoConstraints)
-      .then((stream) => {
-        video.srcObject = stream;
-        video.play();
-      })
-      .catch((err) => console.log("Camera access denied:", err));
-
-    // Capture the image once the video is ready
-    video.onloadeddata = () => {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext("2d").drawImage(video, 0, 0);
-      setImage(canvas.toDataURL("image/png")); // Store captured image
-      video.srcObject.getTracks().forEach(track => track.stop()); // Stop the video stream after capture
-    };
+  // 7️⃣ Function to add a new joke
+  const addJoke = (newJoke) => {
+    const newJokeWithUser = { ...newJoke, username: user };
+    setUserJokes([...userJokes, newJokeWithUser]);
   };
 
-  const nextCard = () => {
-    setShowAnswer(false);
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % userJokes.length);
-  };
-
-  const toggleAnswer = () => {
-    setShowAnswer(!showAnswer);
-  };
-
-  const handleCreateJoke = () => {
-    setIsCreating(true);
-  };
-
-  const handleSubmitJoke = () => {
-    if (newJoke.question && newJoke.answer) {
-      const newJokeWithUser = { ...newJoke, username: user };
-      setUserJokes([...userJokes, newJokeWithUser]);
-      setNewJoke({ question: "", answer: "" });
-      setIsCreating(false);
-      setCurrentIndex(userJokes.length); // Set the current index to the last added joke
-    }
-  };
-
-  const handleDeleteJoke = (index) => {
-    const updatedUserJokes = userJokes.filter(
-      (_, jokeIndex) => jokeIndex !== index
-    );
+  // 8️⃣ Function to delete a joke
+  const deleteJoke = (index) => {
+    const updatedUserJokes = userJokes.filter((_, i) => i !== index);
     setUserJokes(updatedUserJokes);
-    if (index === currentIndex) {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % updatedUserJokes.length);
-    }
+  };
+
+  // 9️⃣ Function to set joke for editing
+  const startEditingJoke = (index) => {
+    setEditingJoke({ index, ...userJokes[index] });
+  };
+
+  // 🔟 Function to update the joke
+  const updateJoke = (updatedJoke) => {
+    const updatedJokes = userJokes.map((joke, i) =>
+      i === editingJoke.index ? updatedJoke : joke
+    );
+    setUserJokes(updatedJokes);
+    setEditingJoke(null); // Clear editing state
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+      {/* Header */}
       <h2 className="text-2xl font-semibold mb-4">Welcome, {user}!</h2>
 
-      {/* Display User-created Jokes */}
-      {userJokes.length > 0 && (
-        <div className="w-80 bg-white shadow-lg rounded-2xl p-6 text-center">
-          <h2 className="text-xl font-semibold text-gray-800">
-            {showAnswer ? userJokes[currentIndex].answer : userJokes[currentIndex].question}
-          </h2>
-        </div>
-      )}
+      {/* 11️⃣ Joke Display Component */}
+      <JokeDisplay joke={userJokes[currentIndex]} showAnswer={showAnswer} />
 
-      {/* Display message if no jokes available */}
-      {userJokes.length === 0 && <div>No jokes available. Create your first joke!</div>}
-
-      {/* Buttons for next joke and show/hide answer */}
+      {/* 12️⃣ Joke Navigation Buttons */}
       <div className="mt-4 flex gap-4">
         <button
-          className="px-6 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600"
-          onClick={nextCard}
+          className="px-6 py-2 bg-blue-500 text-white rounded-lg"
+          onClick={() => setCurrentIndex((prev) => (prev + 1) % userJokes.length)}
         >
           Next Joke
         </button>
         <button
-          className="px-6 py-2 bg-yellow-500 text-white rounded-lg shadow-md hover:bg-yellow-600"
-          onClick={toggleAnswer}
+          className="px-6 py-2 bg-yellow-500 text-white rounded-lg"
+          onClick={() => setShowAnswer(!showAnswer)}
         >
           {showAnswer ? "Hide Answer" : "Show Answer"}
         </button>
       </div>
 
-      {/* Create Your Own Joke */}
-      {!isCreating ? (
-        <button
-          className="mt-4 px-6 py-2 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-600"
-          onClick={handleCreateJoke}
-        >
-          Create Your Own Joke
-        </button>
+      {/* 13️⃣ Create or Edit Joke Form */}
+      {editingJoke ? (
+        <CreateJokeForm addJoke={updateJoke} initialJoke={editingJoke} isEditing={true} />
       ) : (
-        <div className="mt-4 w-80 bg-white shadow-lg rounded-2xl p-6">
-          <input
-            className="w-full p-2 mb-2 border rounded-lg"
-            type="text"
-            placeholder="Enter question"
-            value={newJoke.question}
-            onChange={(e) =>
-              setNewJoke({ ...newJoke, question: e.target.value })
-            }
-          />
-          <input
-            className="w-full p-2 mb-2 border rounded-lg"
-            type="text"
-            placeholder="Enter answer"
-            value={newJoke.answer}
-            onChange={(e) => setNewJoke({ ...newJoke, answer: e.target.value })}
-          />
-          <button
-            className="w-full px-6 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600"
-            onClick={handleSubmitJoke}
-          >
-            Submit Joke
-          </button>
-        </div>
+        <CreateJokeForm addJoke={addJoke} />
       )}
 
-      {/* Display User's Jokes */}
-      {userJokes.length > 0 && (
-        <div className="mt-4 w-80 bg-white shadow-lg rounded-2xl p-6">
-          <h3 className="text-lg font-semibold mb-4">Your Jokes</h3>
-          <ul>
-            {userJokes.map((joke, index) => (
-              <li key={index} className="flex justify-between items-center mb-2">
-                <span>{joke.question}</span>
-                <button
-                  className="ml-4 text-red-500 hover:text-red-700"
-                  onClick={() => handleDeleteJoke(index)}
-                >
-                  Delete
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      {/* 14️⃣ User Jokes List (Includes Edit Button) */}
+      <UserJokes jokes={userJokes} deleteJoke={deleteJoke} startEditingJoke={startEditingJoke} />
 
-      {/* Display User's Location */}
-      {location && (
-        <div className="mt-4 bg-white shadow-lg rounded-2xl p-6 text-center">
-          <h3 className="text-lg font-semibold mb-4">Your Location</h3>
-          <p>Latitude: {location.latitude}</p>
-          <p>Longitude: {location.longitude}</p>
-        </div>
-      )}
+      {/* 15️⃣ Location Display */}
+      <LocationDisplay location={location} geoError={geoError} />
 
-      {error && (
-        <div className="mt-4 bg-red-500 text-white rounded-2xl p-6 text-center">
-          <p>{error}</p>
-        </div>
-      )}
-
-      {/* Display Captured Image */}
-      {image && (
-        <div className="mt-4 bg-red-600 shadow-lg rounded-2xl p-6 text-center">
-          <h3 className="text-lg font-semibold mb-4 text-black">Captured Image</h3>
-          <img src={image} alt="Captured" className="w-64 h-64 object-cover rounded-full" />
-        </div>
-      )}
-
-      {/* Button to capture image */}
-      <button
-        className="mt-4 px-6 py-2 bg-red-600 text-black rounded-lg shadow-md hover:bg-red-700"
-        onClick={handleCaptureImage}
-      >
-        Capture Image
-      </button>
+      {/* 16️⃣ Camera Capture */}
+      <CameraCapture />
     </div>
   );
 };
