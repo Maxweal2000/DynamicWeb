@@ -1,4 +1,4 @@
-//Cache Essentials Assets 
+//Cache Essentials Assets
 const cacheName = "joke-generator-v1";
 const cacheAssets = [
     "/index.html",
