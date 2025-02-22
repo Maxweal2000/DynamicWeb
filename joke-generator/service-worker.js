@@ -1,57 +1,47 @@
-//Cache Essentials Assets
-const cacheName = "joke-generator-v1";
+// Cache name and assets to be cached
+const cacheName = "Joke-generator-v1";
 const cacheAssets = [
-    "/index.html",
-    "/manifest.json",
-    "/src/icons/joke-48x48.png",
-    "/src/icons/joke-72x72.png",
-    "/src/main.jsx",
-    "/src/App.jsx",
-    "/src/style.css"
+  "index.html",
+ 
 ];
 
-
-
-//Call Install event
+// Install event - caching assets
 self.addEventListener("install", (event) => {
-    console.log("Service worker Installling...");
-// Put your code for caching assets, etc. here
-
-    event.waitUntil(
-        caches.open(cacheName).then((cache) => {
-            console.log("Caching assets...");
-            return cache.addAll(cacheAssets);
-        })
-    );
+  console.log("Service worker installing...");
+  event.waitUntil(
+    caches.open(cacheName).then((cache) => {
+      console.log("Caching essential assets...");
+      return cache.addAll(cacheAssets); // Cache defined assets
+    })
+  );
 });
 
-//Serve Cached Assets (Fetch Event)
+// Fetch event - serving cached assets or fetching from the network
 self.addEventListener("fetch", (event) => {
-    console.log("Fetching:", event.request.url);
-
-    event.respondWith(
-        caches.match(event.request).then((response) => {
-            return response || fetch(event.request);
-        })
-    );
+  console.log("Fetching:", event.request.url);
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      // Cache hit - return the cached response
+      return response || fetch(event.request); // Fetch from the network if not cached
+    })
+  );
 });
 
-//delete old cache (Activate Event)
+// Activate event - clean up old caches
 self.addEventListener("activate", (event) => {
-    console.log("Service Worker activating...");
-
-    event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cache) => {
-                    if (cache !== cacheName) {
-                        console.log("Deleting old cache:", cache);
-                        return caches.delete(cache);
-                    }
-                })
-            );
+  console.log("Service worker activating...");
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cache) => {
+          if (cache !== cacheName) {
+            console.log("Deleting old cache:", cache);
+            return caches.delete(cache); // Delete old cache
+          }
         })
-    );
+      );
+    })
+  );
 });
 
 
