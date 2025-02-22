@@ -1,4 +1,4 @@
-#Joke Generator App
+# Joke Generator App
 A fun React-based web app that allows users to add their own jokes, with interactive features like location tracking and selfie capture.
 You can access the application here:
 https://jokegenerator-three.vercel.app/
