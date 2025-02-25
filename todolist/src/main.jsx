@@ -3,10 +3,11 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
 
+// Check if service workers are supported by the browser
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
-    .register("./service-worker.js")
+    .register("./sw.js")
     .then((registration) => {
       console.log("Service Worker registered! Scope: ", registration.scope);
     })
@@ -15,13 +16,14 @@ if ("serviceWorker" in navigator) {
     });
   });
 }
-
+/*
 // eslint-disable-next-line react-refresh/only-export-components
-// const DATA = [
-//{ id: "todo-0", name: "Eat", completed: true },
-//{ id: "todo-1", name: "Sleep", completed: false },
-//{ id: "todo-2", name: "Repeat", completed: false },
-// ];
+ const DATA = [
+{ id: "todo-0", name: "Eat", completed: true },
+{ id: "todo-1", name: "Sleep", completed: false },
+{ id: "todo-2", name: "Repeat", completed: false },
+ ];
+ */
 const DATA = JSON.parse(localStorage.getItem('tasks')) || [] ;
 
 ReactDOM.createRoot(document.getElementById('root')).render(
