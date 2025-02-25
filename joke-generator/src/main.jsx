@@ -3,10 +3,9 @@ import { createRoot } from 'react-dom/client'
 import './styles.css'
 import App from './App.jsx'
 
-// Check if service workers are supported by the browser
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
+window.addEventListener("load", () => {
+  navigator.serviceWorker
     .register("./service-worker.js")
     .then((registration) => {
       console.log("Service Worker registered! Scope: ", registration.scope);
@@ -16,10 +15,9 @@ if ("serviceWorker" in navigator) {
     });
   });
 }
- 
-  createRoot(document.getElementById('root')).render(
+
+createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />
   </StrictMode>,
 )
-
