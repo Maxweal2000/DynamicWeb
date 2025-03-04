@@ -8,7 +8,7 @@ function usePrevious(value) {
   const ref = useRef(null);
   useEffect(() => {
     ref.current = value;
-  });
+  }, [value]); // Added dependency array
   return ref.current;
 }
 
@@ -23,37 +23,38 @@ const FILTER_NAMES = Object.keys(FILTER_MAP);
 function App(props) {
   const [tasks, setTasks] = useState(props.tasks);
   const [filter, setFilter] = useState("All");
-  const [userLocation, setUserLocation] = useState(null);
+  const [lastInsertedId, setLastInsertedId] = useState(""); // Added this new hook
 
-  // define the function that finds the users geolocation
   const geoFindMe = () => {
-    if (navigator.geolocation) {
-      // get the current users location
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          // save the geolocation coordinates in two variables
-          const { latitude, longitude } = position.coords;
-          // update the value of userlocation variable
-          setUserLocation({ latitude, longitude });
-        },
-        // if there was an error getting the users location
-        (error) => {
-          console.error("Error getting user location:", error);
-        }
-      );
+    if (!navigator.geolocation) {
+      console.log("Geolocation is not supported by your browser");
+    } else {
+      console.log("Locating…");
+      navigator.geolocation.getCurrentPosition(success, error);
     }
-    // if geolocation is not supported by the users browser
-    else {
-      console.error("Geolocation is not supported by this browser.");
-    }
+  };
+
+  const success = (position) => {
+    const latitude = position.coords.latitude;
+    const longitude = position.coords.longitude;
+    console.log(latitude, longitude);
+    console.log(`Latitude: ${latitude}°, Longitude: ${longitude}°`);
+    console.log(`Try here: https://www.openstreetmap.org/#map=18/${latitude}/${longitude}`);
+
+    locateTask(lastInsertedId, {
+      latitude: latitude,
+      longitude: longitude,
+      error: "",
+    });
+  };
+
+  const error = () => {
+    console.log("Unable to retrieve your location");
   };
 
   function toggleTaskCompleted(id) {
     const updatedTasks = tasks.map((task) => {
-      // if this task has the same ID as the edited task
       if (id === task.id) {
-        // use object spread to make a new obkect
-        // whose `completed` prop has been inverted
         return { ...task, completed: !task.completed };
       }
       return task;
@@ -66,17 +67,15 @@ function App(props) {
     setTasks(remainingTasks);
   }
 
-  function editTask(id, newName) {
-    const editedTaskList = tasks.map((task) => {
-      // if this task has the same ID as the edited task
-      if (id === task.id) {
-        // Copy the task and update its name
-        return { ...task, name: newName };
-      }
-      // Return the original task if it's not the edited task
-      return task;
-    });
-    setTasks(editedTaskList);
+  function locateTask(id, location) {
+    console.log("Locating Task:", id);
+    console.log("Before:", tasks);
+
+    setTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task.id === id ? { ...task, location: location } : task
+      )
+    );
   }
 
   const taskList = tasks
@@ -87,9 +86,11 @@ function App(props) {
         name={task.name}
         completed={task.completed}
         key={task.id}
+        latitude={task.location?.latitude || "N/A"} // Avoid errors if location is undefined
+        longitude={task.location?.longitude || "N/A"}
         toggleTaskCompleted={toggleTaskCompleted}
         deleteTask={deleteTask}
-        editTask={editTask}
+        editTask={locateTask}
       />
     ));
 
@@ -103,10 +104,17 @@ function App(props) {
   ));
 
   function addTask(name) {
-    const newTask = { id: "todo-" + nanoid(), name: name, completed: false };
+    const id = "todo-" + nanoid();
+    const newTask = {
+      id: id,
+      name: name,
+      completed: false,
+      location: { latitude: "##", longitude: "##", error: "##" },
+    };
+    setLastInsertedId(id);
     setTasks([...tasks, newTask]);
   }
-  
+
   const tasksNoun = taskList.length !== 1 ? "tasks" : "task";
   const headingText = `${taskList.length} ${tasksNoun} remaining`;
 
@@ -115,24 +123,14 @@ function App(props) {
 
   useEffect(() => {
     if (tasks.length < prevTaskLength) {
-      listHeadingRef.current.focus();
+      listHeadingRef.current?.focus(); // Prevent potential errors
     }
   }, [tasks.length, prevTaskLength]);
 
-  
-
   return (
     <div className="todoapp stack-large">
-      <h1>TodoMatic</h1>
-      <Form addTask={addTask} />
-      <button onClick={geoFindMe}>Show my location</button>
-       {userLocation && (
-         <div>
-          <h2>User Location</h2>
-          <p>Latitude: {userLocation.latitude}</p>
-          <p>Longitude: {userLocation.longitude}</p>
-        </div>
-       )}
+      <h1>Geo TodoMatic</h1>
+      <Form addTask={addTask} geoFindMe={geoFindMe} />
       <div className="filters btn-group stack-exception">{filterList}</div>
       <h2 id="list-heading" tabIndex="-1" ref={listHeadingRef}>
         {headingText}

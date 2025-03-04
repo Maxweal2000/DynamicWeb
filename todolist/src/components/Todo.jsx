@@ -4,7 +4,7 @@ function usePrevious(value) {
   const ref = useRef(null);
   useEffect(() => {
     ref.current = value;
-  });
+  }, [value]); // Added dependency array to avoid stale values
   return ref.current;
 }
 
@@ -21,11 +21,9 @@ function Todo(props) {
     setNewName(event.target.value);
   }
 
-  // NOTE: As written, this function has a bug: it doesn't prevent the user
-  // from submitting an empty form. This is left as an exercise for developers
-  // working through MDN's React tutorial.
   function handleSubmit(event) {
     event.preventDefault();
+    if (!newName.trim()) return; // Prevent empty submissions
     props.editTask(props.id, newName);
     setNewName("");
     setEditing(false);
@@ -50,7 +48,8 @@ function Todo(props) {
         <button
           type="button"
           className="btn todo-cancel"
-          onClick={() => setEditing(false)}>
+          onClick={() => setEditing(false)}
+        >
           Cancel
           <span className="visually-hidden">renaming {props.name}</span>
         </button>
@@ -73,22 +72,24 @@ function Todo(props) {
         />
         <label className="todo-label" htmlFor={props.id}>
           {props.name}
+          &nbsp;| la {props.latitude ?? "N/A"} 
+          &nbsp;| lo {props.longitude ?? "N/A"} 
         </label>
       </div>
       <div className="btn-group">
         <button
           type="button"
           className="btn"
-          onClick={() => {
-            setEditing(true);
-          }}
-          ref={editButtonRef}>
+          onClick={() => setEditing(true)}
+          ref={editButtonRef}
+        >
           Edit <span className="visually-hidden">{props.name}</span>
         </button>
         <button
           type="button"
           className="btn btn__danger"
-          onClick={() => props.deleteTask(props.id)}>
+          onClick={() => props.deleteTask(props.id)}
+        >
           Delete <span className="visually-hidden">{props.name}</span>
         </button>
       </div>
@@ -97,9 +98,9 @@ function Todo(props) {
 
   useEffect(() => {
     if (!wasEditing && isEditing) {
-      editFieldRef.current.focus();
+      editFieldRef.current?.focus();
     } else if (wasEditing && !isEditing) {
-      editButtonRef.current.focus();
+      editButtonRef.current?.focus();
     }
   }, [wasEditing, isEditing]);
 
