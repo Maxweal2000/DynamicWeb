@@ -31,6 +31,7 @@ const App = () => {
   }, [userJokes]);
 
   // 6️⃣ Retrieve User's Location
+  
   const geoFindMe = () => {
     if (!navigator.geolocation) {
       setUserLocation("Geolocation is not supported!");
