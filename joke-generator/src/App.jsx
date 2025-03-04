@@ -31,29 +31,32 @@ const App = () => {
   }, [userJokes]);
 
   // 6️⃣ Retrieve User's Location
-   // define the function that finds the users geolocation
   const geoFindMe = () => {
-    if (navigator.geolocation) {
-      // get the current users location
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          // save the geolocation coordinates in two variables
-          const { latitude, longitude } = position.coords;
-          // update the value of userlocation variable
-          setUserLocation({ latitude, longitude });
-        },
-        // if there was an error getting the users location
-        (error) => {
-          console.error("Error getting user location:", error);
-        }
-      );
-    }
-    // if geolocation is not supported by the users browser
-    else {
-      console.error("Geolocation is not supported by this browser.");
+    if (!navigator.geolocation) {
+      setUserLocation("Geolocation is not supported!");
+    } else {
+      setUserLocation("Locating...");
+      navigator.geolocation.getCurrentPosition(success, error);
     }
   };
-  
+
+  // Success callback when geolocation is retrieved
+  const success = (position) => {
+    const latitude = position.coords.latitude;
+    const longitude = position.coords.longitude;
+    console.log(latitude, longitude);
+
+    setUserLocation({
+      latitude: latitude,
+      longitude: longitude,
+    });
+  };
+
+  // Error callback if geolocation fails
+  const error = () => {
+    setUserLocation("Unable to retrieve your location");
+  };
+
 
   // 7️⃣ Function to add a new joke
   const addJoke = (newJoke) => {
@@ -117,13 +120,24 @@ const App = () => {
 
       {/* 15️⃣ Location Display */}
       <button onClick={geoFindMe}>Show my location</button>
-       {userLocation && (
-         <div>
+      {userLocation && typeof userLocation === 'object' ? (
+        <div>
           <h2>Current location</h2>
           <p>Latitude: {userLocation.latitude}</p>
           <p>Longitude: {userLocation.longitude}</p>
+           {/* OpenStreetMap link */}
+          <a
+            href={`https://www.openstreetmap.org/#map=18/${userLocation.latitude}/${userLocation.longitude}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500"
+          >
+            View on Map
+          </a>
         </div>
-       )}
+      ) : (
+        <p>{userLocation}</p> // Shows error or "Locating..." message
+      )}
 
       {/* 16️⃣ Camera Capture */}
       <CameraCapture />
