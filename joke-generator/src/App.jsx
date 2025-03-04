@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import JokeDisplay from "./components/JokeDisplay";
 import CreateJokeForm from "./components/CreateJokeForm";
 import UserJokes from "./components/UserJokes";
-import LocationDisplay from "./components/LocationDisplay";
 import CameraCapture from "./components/CameraCapture";
 import "./styles.css";
 
@@ -22,8 +21,9 @@ const App = () => {
   const [editingJoke, setEditingJoke] = useState(null); // Tracks the joke being edited
 
   // 4️⃣ State for location tracking
-  const [location, setLocation] = useState(null);
-  const [geoError, setGeoError] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
+
+
 
   // 5️⃣ Save jokes to localStorage whenever they change
   useEffect(() => {
@@ -31,23 +31,29 @@ const App = () => {
   }, [userJokes]);
 
   // 6️⃣ Retrieve User's Location
-  useEffect(() => {
+   // define the function that finds the users geolocation
+  const geoFindMe = () => {
     if (navigator.geolocation) {
+      // get the current users location
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setLocation({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          });
+          // save the geolocation coordinates in two variables
+          const { latitude, longitude } = position.coords;
+          // update the value of userlocation variable
+          setUserLocation({ latitude, longitude });
         },
-        () => {
-          setGeoError("Unable to retrieve your location.");
+        // if there was an error getting the users location
+        (error) => {
+          console.error("Error getting user location:", error);
         }
       );
-    } else {
-      setGeoError("Geolocation is not supported.");
     }
-  }, []);
+    // if geolocation is not supported by the users browser
+    else {
+      console.error("Geolocation is not supported by this browser.");
+    }
+  };
+  
 
   // 7️⃣ Function to add a new joke
   const addJoke = (newJoke) => {
@@ -110,7 +116,14 @@ const App = () => {
       <UserJokes jokes={userJokes} deleteJoke={deleteJoke} startEditingJoke={startEditingJoke} />
 
       {/* 15️⃣ Location Display */}
-      <LocationDisplay location={location} geoError={geoError} />
+      <button onClick={geoFindMe}>Show my location</button>
+       {userLocation && (
+         <div>
+          <h2>Current location</h2>
+          <p>Latitude: {userLocation.latitude}</p>
+          <p>Longitude: {userLocation.longitude}</p>
+        </div>
+       )}
 
       {/* 16️⃣ Camera Capture */}
       <CameraCapture />

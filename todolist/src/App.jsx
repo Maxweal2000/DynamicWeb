@@ -27,7 +27,6 @@ function App(props) {
 
   // define the function that finds the users geolocation
   const geoFindMe = () => {
-    // if geolocation is supported by the users browser
     if (navigator.geolocation) {
       // get the current users location
       navigator.geolocation.getCurrentPosition(
