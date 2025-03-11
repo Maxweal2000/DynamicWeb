@@ -1,7 +1,7 @@
 {
     "name": "Dynamic Web Technologies",
     "short_name": "DWT",
-    "start_url": "/",
+    "start_url": "/index.html",
     "display": "standalone",
     "background_color": "#fff",
     "description": "A test Application for the module of Dynamic Web Technologies.",
