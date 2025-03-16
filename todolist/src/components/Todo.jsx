@@ -1,4 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import Popup from "reactjs-popup"; // For our popups
+import "reactjs-popup/dist/index.css"; // For the popups to look nicer.
+import Webcam from "react-webcam"; // For using react-webcam
+import { addPhoto, GetPhotoSrc } from "../db.jsx"; // We will need this for futher steps
+
 
 function usePrevious(value) {
   const ref = useRef(null);
@@ -71,9 +76,10 @@ function Todo(props) {
           onChange={() => props.toggleTaskCompleted(props.id)}
         />
         <label className="todo-label" htmlFor={props.id}>
-          {props.name}
-          &nbsp;| la {props.latitude ?? "N/A"} 
-          &nbsp;| lo {props.longitude ?? "N/A"} 
+         {props.name}
+         <a href={props.location.mapURL}>(map)</a> 
+         &nbsp; | &nbsp;
+         <a href={props.location.smsURL}>(sms)</a> 
         </label>
       </div>
       <div className="btn-group">
@@ -83,13 +89,42 @@ function Todo(props) {
           onClick={() => setEditing(true)}
           ref={editButtonRef}
         >
-          Edit <span className="visually-hidden">{props.name}</span>
-        </button>
+         Edit <span className="visually-hidden">{props.name}</span>
+      </button>
+      <Popup 
+        trigger={
+          <button type="button" className="btn">
+            {" "}
+            Take Photo{" "}
+          </button>
+        }
+        modal
+      >
+        <div>
+          <WebcamCapture id={props.id} photoedTask={props.photoedTask} />
+        </div>
+        </Popup>
+
+        <Popup // à 4
+          trigger={
+            <button type="button" className="btn">
+              {" "}
+              View Photo{" "}
+            </button>
+          }
+          modal
+        >
+
+          <div>
+            <ViewPhoto id={props.id} alt={props.name} />
+          </div>
+        </Popup>
         <button
           type="button"
           className="btn btn__danger"
           onClick={() => props.deleteTask(props.id)}
         >
+
           Delete <span className="visually-hidden">{props.name}</span>
         </button>
       </div>
@@ -106,5 +141,29 @@ function Todo(props) {
 
   return <li className="todo">{isEditing ? editingTemplate : viewTemplate}</li>;
 }
+
+const WebcamCapture = {props} => {
+  const webcamRef = useRef(null);
+  const [imgSrc, setImgSrc] = useState(null);
+  const [imgId, setImgId] = useState(null);
+  const [photoSave, setPhotoSave] = useState(false);
+
+  useEffect(() => {
+    if (photoSave) {
+      console.log("useEffect detected photoSave");
+      props.photoedTask(imgId);
+      setPhotoSave(false);
+    }
+  });
+  console.log("WebCamCapture", props.id);
+
+  const capture = useCallback( 
+    (id) => {
+      const imageSrc = webcamRef.current.getScreenshot();
+      setImgSrc(imageSrc);
+      console.log("capture", imageSrc.length, id);
+    },
+    [webcamRef, setImgSrc]
+  );
 
 export default Todo;

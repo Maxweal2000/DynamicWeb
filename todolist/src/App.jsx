@@ -81,13 +81,13 @@ function App(props) {
   const taskList = tasks
     ?.filter(FILTER_MAP[filter])
     .map((task) => (
-      <Todo
+      <Todo 
         id={task.id}
         name={task.name}
         completed={task.completed}
         key={task.id}
-        latitude={task.location?.latitude || "N/A"} // Avoid errors if location is undefined
-        longitude={task.location?.longitude || "N/A"}
+        latitude={task.location.latitude || "N/A"} // Avoid errors if location is undefined
+        longitude={task.location.longitude || "N/A"}
         toggleTaskCompleted={toggleTaskCompleted}
         deleteTask={deleteTask}
         editTask={locateTask}
