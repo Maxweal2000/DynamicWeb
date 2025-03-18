@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from "react";
-import db from "../db"; // Import Dexie database
+import { addPhoto, deletePhoto, getAllPhotos } from "../db";
 
 const CameraCapture = () => {
-  const [image, setImage] = useState(null);
-  const [photos, setPhotos] = useState([]);
+  const [savedImages, setSavedImages] = useState([]); // List of saved images
+  const [viewMode, setViewMode] = useState(false); // Toggle between capture and view modes
+  const [notification, setNotification] = useState(""); // Notification message
 
-  // Load saved photos when the component mounts
+  // Load saved images from Dexie database on component mount
   useEffect(() => {
-    const loadPhotos = async () => {
-      const savedPhotos = await db.photos.toArray();
-      setPhotos(savedPhotos);
+    const loadSavedImages = async () => {
+      const images = await getAllPhotos();
+      setSavedImages(images);
     };
 
-    loadPhotos();
+    loadSavedImages();
   }, []);
 
-  // Handle photo capture
+  // Handle capturing an image
   const handleCaptureImage = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -26,86 +27,109 @@ const CameraCapture = () => {
       const canvas = document.createElement("canvas");
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      const context = canvas.getContext("2d");
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas.getContext("2d").drawImage(video, 0, 0);
 
       const imageData = canvas.toDataURL("image/png");
 
-      // Save photo to IndexedDB
-      const timestamp = new Date().toISOString();
-      await db.photos.add({ timestamp, image: imageData });
+      // Save the captured image to Dexie database
+      await addPhoto(imageData);
 
-      setImage(imageData);
+      // Update the saved images list
+      const images = await getAllPhotos();
+      setSavedImages(images);
 
-      // Stop camera stream
-      stream.getTracks().forEach((track) => track.stop());
+      // Show notification
+      setNotification("Photo has been taken and saved!");
+      setTimeout(() => setNotification(""), 3000); // Clear notification after 3 seconds
 
-      // Reload photos from the DB
-      const savedPhotos = await db.photos.toArray();
-      setPhotos(savedPhotos);
+      stream.getTracks().forEach((track) => track.stop()); // Stop the camera stream
     } catch (error) {
       console.error("Camera access denied:", error);
+      setNotification("Failed to capture photo. Please try again.");
+      setTimeout(() => setNotification(""), 3000); // Clear notification after 3 seconds
     }
   };
 
-  // Function to delete a photo
-  const deletePhoto = async (id) => {
-    await db.photos.delete(id);
-    const savedPhotos = await db.photos.toArray();
-    setPhotos(savedPhotos);
+  // Handle deleting an image
+  const handleDeleteImage = async (id) => {
+    try {
+      // Delete the image from the Dexie database
+      await deletePhoto(id);
+
+      // Update the saved images list
+      const updatedImages = savedImages.filter((photo) => photo.id !== id);
+      setSavedImages(updatedImages);
+
+      // Show notification
+      setNotification("Photo has been deleted!");
+      setTimeout(() => setNotification(""), 3000); // Clear notification after 3 seconds
+    } catch (error) {
+      console.error("Error deleting image:", error);
+      setNotification("Failed to delete photo. Please try again.");
+      setTimeout(() => setNotification(""), 3000); // Clear notification after 3 seconds
+    }
+  };
+
+  // Toggle between capture and view modes
+  const toggleViewMode = () => {
+    setViewMode(!viewMode);
   };
 
   return (
     <div className="mt-4 text-center">
-      <h1 className="text-2xl font-bold mb-4">Camera Capture with IndexedDB</h1>
-
-      {/* Camera capture section */}
-      {image && (
-        <div className="flex justify-center my-4">
-          <img
-            src={image}
-            alt="Captured"
-            className="w-64 h-64 object-cover rounded-lg shadow-lg"
-          />
+      {/* Notification */}
+      {notification && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg">
+          {notification}
         </div>
       )}
 
-      <button
-        className="mt-4 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-        onClick={handleCaptureImage}
-      >
-        📸 Capture Image
-      </button>
+      {/* Capture Mode */}
+      {!viewMode && (
+        <div>
+          <button
+            className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg"
+            onClick={handleCaptureImage}
+          >
+            Take Photo
+          </button>
+        </div>
+      )}
 
-      {/* Gallery section */}
-      <h2 className="text-xl font-bold mt-8">Saved Photos</h2>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-        {photos.length > 0 ? (
-          photos.map((photo) => (
-            <div key={photo.id} className="relative">
-              <img
-                src={photo.image}
-                alt={`Captured on ${new Date(photo.timestamp).toLocaleString()}`}
-                className="w-full h-auto rounded-lg shadow-lg"
-              />
-              <p className="text-sm text-gray-600 mt-1">
-                {new Date(photo.timestamp).toLocaleString()}
-              </p>
-              <button
-                className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded"
-                onClick={() => deletePhoto(photo.id)}
-              >
-                ❌ Delete
-              </button>
-            </div>
-          ))
-        ) : (
-          <p className="text-gray-600">No saved photos.</p>
-        )}
-      </div>
+      {/* View Mode */}
+      {viewMode && (
+        <div>
+          <h2 className="text-xl font-bold mb-4">Saved Photos</h2>
+          <div className="flex flex-wrap justify-center gap-4">
+            {savedImages.map((photo) => (
+              <div key={photo.id} className="relative">
+                <img
+                  src={photo.imageData}
+                  alt={`Saved ${photo.id}`}
+                  className="w-32 h-32 object-cover rounded-lg"
+                />
+                {/* Delete Button */}
+                <button
+                  className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
+                  onClick={() => handleDeleteImage(photo.id)}
+                >
+                  🗑️
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Toggle Button */}
+      <button
+        className="mt-4 px-6 py-2 bg-green-500 text-white rounded-lg"
+        onClick={toggleViewMode}
+      >
+        {viewMode ? "Take Photo" : "View Photos"}
+      </button>
     </div>
   );
 };
 
 export default CameraCapture;
-

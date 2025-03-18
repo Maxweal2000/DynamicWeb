@@ -1,84 +1,43 @@
-// src/db.jsx
+import Dexie from "dexie";
 
-import Dexie from "dexie"; 
-import { useLiveQuery } from "dexie-react-hooks"; 
+// Initialize Dexie database
+export const db = new Dexie("CameraAppDB");
 
-// ✅ Initialize Dexie database
-export const db = new Dexie("joke-photos");
-
-// ✅ Define table schema
+// Define database schema
 db.version(1).stores({
-  photos: "id, timestamp, imgSrc" // 'id' as the primary key, timestamp for ordering, and imgSrc for image data
+  photos: "++id, imageData", // For CameraCapture component
 });
 
-// ✅ Console logs for tracking database operations
-db.on("populate", () => console.log("Database populated"));
-db.on("ready", () => console.log("Database is ready"));
-db.on("error", (error) => console.error("Database error:", error));
-
-// ✅ Local Storage Sync Function
-const syncWithLocalStorage = async () => {
+// Function to add a photo
+export const addPhoto = async (imageData) => {
   try {
-    const photos = await db.photos.toArray();
-    console.log("Syncing with Local Storage. Total photos:", photos.length);
-    
-    // Store photos in localStorage
-    localStorage.setItem("photoGallery", JSON.stringify(photos));
-    
-    console.log("Photos saved to localStorage");
+    await db.photos.add({ imageData });
+    console.log("Photo saved to CameraAppDB");
   } catch (error) {
-    console.error("Failed to sync with localStorage:", error);
+    console.error("Failed to save photo:", error);
   }
 };
 
-// ✅ Hooks to automatically sync changes with localStorage
-db.photos.hook("creating", () => {
-  console.log("Photo added to IndexedDB");
-  syncWithLocalStorage();
-});
-
-db.photos.hook("deleting", () => {
-  console.log("Photo removed from IndexedDB");
-  syncWithLocalStorage();
-});
-
-
-// ✅ Async function to add a photo
-export async function addPhoto(id, imgSrc) {
-  console.log("Adding photo:", imgSrc.length, id);
-
+// Function to delete a photo
+export const deletePhoto = async (id) => {
   try {
-    await db.photos.put({
-      id: id,           // Unique ID
-      timestamp: new Date().toISOString(),  // Current timestamp
-      imgSrc: imgSrc    // Base64 encoded image data
-    });
-
-    console.log(`Photo added successfully: ${id}`);
+    await db.photos.delete(id);
+    console.log("Photo deleted from CameraAppDB");
   } catch (error) {
-    console.error(`Failed to add photo: ${error}`);
+    console.error("Failed to delete photo:", error);
   }
-}
+};
 
-// ✅ Function to get the photo source by task ID using live queries
-export function GetPhotoSrc(id) {
-  console.log("Fetching photo with ID:", id);
-
-  const img = useLiveQuery(() => db.photos.where("id").equals(id).toArray());
-
-  console.table(img);
-
-  // If photo exists, return the image source
-  if (Array.isArray(img) && img.length > 0) {
-    return img[0]?.imgSrc;
+// Function to get all photos
+export const getAllPhotos = async () => {
+  try {
+    const photos = await db.photos.toArray();
+    return photos;
+  } catch (error) {
+    console.error("Failed to fetch photos:", error);
+    return [];
   }
-  return null;
-}
-
-// ✅ Function to get all photos using live query
-export function useAllPhotos() {
-  return useLiveQuery(() => db.photos.toArray()) || [];
-}
+};
 
 export default db;
 

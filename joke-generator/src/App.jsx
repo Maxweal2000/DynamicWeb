@@ -3,7 +3,6 @@ import JokeDisplay from "./components/JokeDisplay";
 import CreateJokeForm from "./components/CreateJokeForm";
 import UserJokes from "./components/UserJokes";
 import CameraCapture from "./components/CameraCapture";
-import { useAllPhotos, db } from "./db";  // 🆕 Import Dexie hooks and db
 import "./styles.css";
 
 const App = () => {
@@ -39,6 +38,7 @@ const App = () => {
     }
   };
 
+  // Success callback when geolocation is retrieved
   const success = (position) => {
     const latitude = position.coords.latitude;
     const longitude = position.coords.longitude;
@@ -50,39 +50,35 @@ const App = () => {
     });
   };
 
+  // Error callback if geolocation fails
   const error = () => {
     setUserLocation("Unable to retrieve your location");
   };
 
-  // 7️⃣ Add, delete, and update jokes
+  // 7️⃣ Function to add a new joke
   const addJoke = (newJoke) => {
     const newJokeWithUser = { ...newJoke, username: user };
     setUserJokes([...userJokes, newJokeWithUser]);
   };
 
+  // 8️⃣ Function to delete a joke
   const deleteJoke = (index) => {
     const updatedUserJokes = userJokes.filter((_, i) => i !== index);
     setUserJokes(updatedUserJokes);
   };
 
+  // 9️⃣ Function to set joke for editing
   const startEditingJoke = (index) => {
     setEditingJoke({ index, ...userJokes[index] });
   };
 
+  // 🔟 Function to update the joke
   const updateJoke = (updatedJoke) => {
     const updatedJokes = userJokes.map((joke, i) =>
       i === editingJoke.index ? updatedJoke : joke
     );
     setUserJokes(updatedJokes);
-    setEditingJoke(null);
-  };
-
-  // 🆕 State for managing photos
-  const photos = useAllPhotos();
-
-  // 🆕 Function to delete a photo
-  const deletePhoto = async (id) => {
-    await db.photos.delete(id);  // Remove from IndexedDB
+    setEditingJoke(null); // Clear editing state
   };
 
   return (
@@ -116,60 +112,40 @@ const App = () => {
         <CreateJokeForm addJoke={addJoke} />
       )}
 
-      {/* 14️⃣ User Jokes List */}
+      {/* 14️⃣ User Jokes List (Includes Edit Button) */}
       <UserJokes jokes={userJokes} deleteJoke={deleteJoke} startEditingJoke={startEditingJoke} />
 
       {/* 15️⃣ Location Display */}
-      <button onClick={geoFindMe}>Show my location</button>
-      {userLocation && typeof userLocation === "object" ? (
-        <div>
-          <h2>Current location</h2>
+      <button
+        onClick={geoFindMe}
+        className="mt-4 px-6 py-2 bg-green-500 text-white rounded-lg"
+      >
+        Show my location
+      </button>
+      {userLocation && typeof userLocation === 'object' ? (
+        <div className="mt-4 text-center">
+          <h2 className="text-xl font-bold">Current Location</h2>
           <p>Latitude: {userLocation.latitude}</p>
           <p>Longitude: {userLocation.longitude}</p>
+          {/* OpenStreetMap link */}
           <a
             href={`https://www.openstreetmap.org/#map=18/${userLocation.latitude}/${userLocation.longitude}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-500"
+            className="text-blue-500 underline"
           >
             View on Map
           </a>
         </div>
       ) : (
-        <p>{userLocation}</p>
+        <p className="mt-4">{userLocation}</p> // Shows error or "Locating..." message
       )}
 
       {/* 16️⃣ Camera Capture */}
-      <CameraCapture />
-
-      {/* 🆕 17️⃣ Photo Gallery */}
-      <h2 className="text-xl font-bold mt-8">Captured Photos</h2>
-      {photos.length > 0 ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-          {photos.map((photo) => (
-            <div key={photo.id} className="relative border rounded-lg shadow-lg overflow-hidden">
-              <img
-                src={photo.imgSrc}
-                alt={`Captured on ${new Date(photo.timestamp).toLocaleString()}`}
-                className="w-full h-40 object-cover"
-              />
-              <div className="p-2">
-                <p className="text-sm text-gray-600">
-                  {new Date(photo.timestamp).toLocaleString()}
-                </p>
-                <button
-                  className="mt-2 bg-red-500 text-white px-4 py-1 rounded hover:bg-red-700"
-                  onClick={() => deletePhoto(photo.id)}
-                >
-                  ❌ Delete
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="text-gray-600 mt-4">No photos captured yet.</p>
-      )}
+      <div className="mt-8">
+        <h2 className="text-xl font-bold mb-4">Camera Capture</h2>
+        <CameraCapture />
+      </div>
     </div>
   );
 };
