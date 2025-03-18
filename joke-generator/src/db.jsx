@@ -11,8 +11,9 @@ db.version(1).stores({
 // Function to add a photo
 export const addPhoto = async (imageData) => {
   try {
-    await db.photos.add({ imageData });
-    console.log("Photo saved to CameraAppDB");
+    console.log("Attempting to add photo to database...");
+    const id = await db.photos.add({ imageData });
+    console.log(`Photo saved to CameraAppDB with id: ${id}`);
   } catch (error) {
     console.error("Failed to save photo:", error);
   }
@@ -21,8 +22,9 @@ export const addPhoto = async (imageData) => {
 // Function to delete a photo
 export const deletePhoto = async (id) => {
   try {
+    console.log(`Attempting to delete photo with id: ${id}...`);
     await db.photos.delete(id);
-    console.log("Photo deleted from CameraAppDB");
+    console.log(`Photo with id: ${id} deleted from CameraAppDB`);
   } catch (error) {
     console.error("Failed to delete photo:", error);
   }
@@ -31,13 +33,12 @@ export const deletePhoto = async (id) => {
 // Function to get all photos
 export const getAllPhotos = async () => {
   try {
+    console.log("Fetching all photos from database...");
     const photos = await db.photos.toArray();
+    console.log(`Retrieved ${photos.length} photos from database`);
     return photos;
   } catch (error) {
     console.error("Failed to fetch photos:", error);
     return [];
   }
 };
-
-export default db;
-

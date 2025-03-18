@@ -8,8 +8,10 @@ const CameraCapture = () => {
 
   // Load saved images from Dexie database on component mount
   useEffect(() => {
+    console.log("Component mounted. Loading saved images...");
     const loadSavedImages = async () => {
       const images = await getAllPhotos();
+      console.log("Loaded saved images:", images);
       setSavedImages(images);
     };
 
@@ -19,6 +21,7 @@ const CameraCapture = () => {
   // Handle capturing an image
   const handleCaptureImage = async () => {
     try {
+      console.log("Attempting to capture image...");
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       const video = document.createElement("video");
       video.srcObject = stream;
@@ -30,12 +33,14 @@ const CameraCapture = () => {
       canvas.getContext("2d").drawImage(video, 0, 0);
 
       const imageData = canvas.toDataURL("image/png");
+      console.log("Image captured successfully:", imageData);
 
       // Save the captured image to Dexie database
       await addPhoto(imageData);
 
       // Update the saved images list
       const images = await getAllPhotos();
+      console.log("Updated saved images list:", images);
       setSavedImages(images);
 
       // Show notification
@@ -43,6 +48,7 @@ const CameraCapture = () => {
       setTimeout(() => setNotification(""), 3000); // Clear notification after 3 seconds
 
       stream.getTracks().forEach((track) => track.stop()); // Stop the camera stream
+      console.log("Camera stream stopped.");
     } catch (error) {
       console.error("Camera access denied:", error);
       setNotification("Failed to capture photo. Please try again.");
@@ -53,11 +59,13 @@ const CameraCapture = () => {
   // Handle deleting an image
   const handleDeleteImage = async (id) => {
     try {
+      console.log(`Attempting to delete photo with id: ${id}...`);
       // Delete the image from the Dexie database
       await deletePhoto(id);
 
       // Update the saved images list
       const updatedImages = savedImages.filter((photo) => photo.id !== id);
+      console.log("Updated saved images list after deletion:", updatedImages);
       setSavedImages(updatedImages);
 
       // Show notification
@@ -72,6 +80,7 @@ const CameraCapture = () => {
 
   // Toggle between capture and view modes
   const toggleViewMode = () => {
+    console.log(`Toggling view mode. Current mode: ${viewMode ? "View" : "Capture"}`);
     setViewMode(!viewMode);
   };
 
