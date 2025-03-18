@@ -1,19 +1,20 @@
-import { useEffect, useRef, useState } from "react";
-import Popup from "reactjs-popup"; // For our popups
-import "reactjs-popup/dist/index.css"; // For the popups to look nicer.
-import Webcam from "react-webcam"; // For using react-webcam
-import { addPhoto, GetPhotoSrc } from "../db.jsx"; // We will need this for futher steps
-
+import { useEffect, useRef, useState, useCallback } from "react";
+import Popup from "reactjs-popup"; // W07 CAM
+import "reactjs-popup/dist/index.css"; // W07 CAM
+import Webcam from "react-webcam"; // W07 CAM
+import { addPhoto, GetPhotoSrc } from "../db.jsx"; // W07 CAM
 
 function usePrevious(value) {
   const ref = useRef(null);
   useEffect(() => {
     ref.current = value;
-  }, [value]); // Added dependency array to avoid stale values
+  });
   return ref.current;
 }
 
-function Todo(props) {
+
+// Main Todo Component ----
+export default function Todo(props) {
   const [isEditing, setEditing] = useState(false);
   const [newName, setNewName] = useState("");
 
@@ -28,7 +29,6 @@ function Todo(props) {
 
   function handleSubmit(event) {
     event.preventDefault();
-    if (!newName.trim()) return; // Prevent empty submissions
     props.editTask(props.id, newName);
     setNewName("");
     setEditing(false);
@@ -44,7 +44,7 @@ function Todo(props) {
           id={props.id}
           className="todo-text"
           type="text"
-          value={newName}
+          value={newName || props.name}
           onChange={handleChange}
           ref={editFieldRef}
         />
@@ -76,36 +76,39 @@ function Todo(props) {
           onChange={() => props.toggleTaskCompleted(props.id)}
         />
         <label className="todo-label" htmlFor={props.id}>
-         {props.name}
-         <a href={props.location.mapURL}>(map)</a> 
-         &nbsp; | &nbsp;
-         <a href={props.location.smsURL}>(sms)</a> 
+          {props.name}
+          <a href={props.location.mapURL}>(map)</a> {/*W07 CAM - improvement*/}
+          &nbsp; | &nbsp;
+          <a href={props.location.smsURL}>(sms)</a> {/*W07 CAM - improvement*/}
         </label>
       </div>
       <div className="btn-group">
         <button
           type="button"
           className="btn"
-          onClick={() => setEditing(true)}
+          onClick={() => {
+            setEditing(true);
+          }}
           ref={editButtonRef}
         >
-         Edit <span className="visually-hidden">{props.name}</span>
-      </button>
-      <Popup 
-        trigger={
-          <button type="button" className="btn">
-            {" "}
-            Take Photo{" "}
-          </button>
-        }
-        modal
-      >
-        <div>
-          <WebcamCapture id={props.id} photoedTask={props.photoedTask} />
-        </div>
+          Edit <span className="visually-hidden">{props.name}</span>
+        </button>
+        {/*W07 CAM - Popup Take Photo*/}
+        <Popup
+          trigger={
+            <button type="button" className="btn">
+              {" "}
+              Take Photo{" "}
+            </button>
+          }
+          modal
+        >
+          <div>
+            <WebcamCapture id={props.id} photoedTask={props.photoedTask} />
+          </div>
         </Popup>
-
-        <Popup // à 4
+        {/*W07 CAM - Popup View Photo*/}
+        <Popup
           trigger={
             <button type="button" className="btn">
               {" "}
@@ -114,7 +117,6 @@ function Todo(props) {
           }
           modal
         >
-
           <div>
             <ViewPhoto id={props.id} alt={props.name} />
           </div>
@@ -124,7 +126,6 @@ function Todo(props) {
           className="btn btn__danger"
           onClick={() => props.deleteTask(props.id)}
         >
-
           Delete <span className="visually-hidden">{props.name}</span>
         </button>
       </div>
@@ -133,16 +134,18 @@ function Todo(props) {
 
   useEffect(() => {
     if (!wasEditing && isEditing) {
-      editFieldRef.current?.focus();
+      editFieldRef.current.focus();
     } else if (wasEditing && !isEditing) {
-      editButtonRef.current?.focus();
+      editButtonRef.current.focus();
     }
   }, [wasEditing, isEditing]);
 
   return <li className="todo">{isEditing ? editingTemplate : viewTemplate}</li>;
 }
 
-const WebcamCapture = {props} => {
+// W07 CAM - New Component WebcamCapture
+//
+const WebcamCapture = (props) => {
   const webcamRef = useRef(null);
   const [imgSrc, setImgSrc] = useState(null);
   const [imgId, setImgId] = useState(null);
@@ -156,8 +159,7 @@ const WebcamCapture = {props} => {
     }
   });
   console.log("WebCamCapture", props.id);
-
-  const capture = useCallback( 
+  const capture = useCallback(
     (id) => {
       const imageSrc = webcamRef.current.getScreenshot();
       setImgSrc(imageSrc);
@@ -166,4 +168,63 @@ const WebcamCapture = {props} => {
     [webcamRef, setImgSrc]
   );
 
-export default Todo;
+  const savePhoto = (id, imgSrc) => {
+    console.log("savePhoto", imgSrc.length, id);
+    addPhoto(id, imgSrc);
+    setImgId(id);
+    setPhotoSave(true);
+  };
+
+  const cancelPhoto = (id, imgSrc) => {
+    console.log("cancelPhoto", imgSrc.length, id);
+  };
+
+  return (
+    <>
+      {!imgSrc && (
+        <Webcam audio={false} ref={webcamRef} screenshotFormat="image/jpeg" />
+      )}
+      {imgSrc && <img src={imgSrc} />}
+      <div className="btn-group">
+        {!imgSrc && (
+          <button
+            type="button"
+            className="btn"
+            onClick={() => capture(props.id)}
+          >
+            Capture photo
+          </button>
+        )}
+        {imgSrc && (
+          <button
+            type="button"
+            className="btn"
+            onClick={() => savePhoto(props.id, imgSrc)}
+          >
+            Save Photo
+          </button>
+        )}
+        <button
+          type="button"
+          className="btn todo-cancel"
+          onClick={() => cancelPhoto(props.id, imgSrc)}
+        >
+          Cancel
+        </button>
+      </div>
+    </>
+  );
+};
+
+// W07 CAM - New Component ViewPhoto
+//
+const ViewPhoto = (props) => {
+  const photoSrc = GetPhotoSrc(props.id);
+  return (
+    <>
+      <div>
+        <img src={photoSrc} alt={props.name} />
+      </div>
+    </>
+  );
+};

@@ -3,6 +3,7 @@ import JokeDisplay from "./components/JokeDisplay";
 import CreateJokeForm from "./components/CreateJokeForm";
 import UserJokes from "./components/UserJokes";
 import CameraCapture from "./components/CameraCapture";
+import { useAllPhotos, db } from "./db";  // 🆕 Import Dexie hooks and db
 import "./styles.css";
 
 const App = () => {
@@ -23,15 +24,12 @@ const App = () => {
   // 4️⃣ State for location tracking
   const [userLocation, setUserLocation] = useState(null);
 
-
-
   // 5️⃣ Save jokes to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem("userJokes", JSON.stringify(userJokes));
   }, [userJokes]);
 
   // 6️⃣ Retrieve User's Location
-  
   const geoFindMe = () => {
     if (!navigator.geolocation) {
       setUserLocation("Geolocation is not supported!");
@@ -41,7 +39,6 @@ const App = () => {
     }
   };
 
-  // Success callback when geolocation is retrieved
   const success = (position) => {
     const latitude = position.coords.latitude;
     const longitude = position.coords.longitude;
@@ -53,36 +50,39 @@ const App = () => {
     });
   };
 
-  // Error callback if geolocation fails
   const error = () => {
     setUserLocation("Unable to retrieve your location");
   };
 
-
-  // 7️⃣ Function to add a new joke
+  // 7️⃣ Add, delete, and update jokes
   const addJoke = (newJoke) => {
     const newJokeWithUser = { ...newJoke, username: user };
     setUserJokes([...userJokes, newJokeWithUser]);
   };
 
-  // 8️⃣ Function to delete a joke
   const deleteJoke = (index) => {
     const updatedUserJokes = userJokes.filter((_, i) => i !== index);
     setUserJokes(updatedUserJokes);
   };
 
-  // 9️⃣ Function to set joke for editing
   const startEditingJoke = (index) => {
     setEditingJoke({ index, ...userJokes[index] });
   };
 
-  // 🔟 Function to update the joke
   const updateJoke = (updatedJoke) => {
     const updatedJokes = userJokes.map((joke, i) =>
       i === editingJoke.index ? updatedJoke : joke
     );
     setUserJokes(updatedJokes);
-    setEditingJoke(null); // Clear editing state
+    setEditingJoke(null);
+  };
+
+  // 🆕 State for managing photos
+  const photos = useAllPhotos();
+
+  // 🆕 Function to delete a photo
+  const deletePhoto = async (id) => {
+    await db.photos.delete(id);  // Remove from IndexedDB
   };
 
   return (
@@ -116,17 +116,16 @@ const App = () => {
         <CreateJokeForm addJoke={addJoke} />
       )}
 
-      {/* 14️⃣ User Jokes List (Includes Edit Button) */}
+      {/* 14️⃣ User Jokes List */}
       <UserJokes jokes={userJokes} deleteJoke={deleteJoke} startEditingJoke={startEditingJoke} />
 
       {/* 15️⃣ Location Display */}
       <button onClick={geoFindMe}>Show my location</button>
-      {userLocation && typeof userLocation === 'object' ? (
+      {userLocation && typeof userLocation === "object" ? (
         <div>
           <h2>Current location</h2>
           <p>Latitude: {userLocation.latitude}</p>
           <p>Longitude: {userLocation.longitude}</p>
-           {/* OpenStreetMap link */}
           <a
             href={`https://www.openstreetmap.org/#map=18/${userLocation.latitude}/${userLocation.longitude}`}
             target="_blank"
@@ -137,11 +136,40 @@ const App = () => {
           </a>
         </div>
       ) : (
-        <p>{userLocation}</p> // Shows error or "Locating..." message
+        <p>{userLocation}</p>
       )}
 
       {/* 16️⃣ Camera Capture */}
       <CameraCapture />
+
+      {/* 🆕 17️⃣ Photo Gallery */}
+      <h2 className="text-xl font-bold mt-8">Captured Photos</h2>
+      {photos.length > 0 ? (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+          {photos.map((photo) => (
+            <div key={photo.id} className="relative border rounded-lg shadow-lg overflow-hidden">
+              <img
+                src={photo.imgSrc}
+                alt={`Captured on ${new Date(photo.timestamp).toLocaleString()}`}
+                className="w-full h-40 object-cover"
+              />
+              <div className="p-2">
+                <p className="text-sm text-gray-600">
+                  {new Date(photo.timestamp).toLocaleString()}
+                </p>
+                <button
+                  className="mt-2 bg-red-500 text-white px-4 py-1 rounded hover:bg-red-700"
+                  onClick={() => deletePhoto(photo.id)}
+                >
+                  ❌ Delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-gray-600 mt-4">No photos captured yet.</p>
+      )}
     </div>
   );
 };
