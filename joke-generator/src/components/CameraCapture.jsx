@@ -1,22 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { addPhoto, deletePhoto, getAllPhotos } from "../db";
+import React, { useState } from "react";
+import { addPhoto, deletePhoto, usePhotos } from "../db"; // Import usePhotos
 
 const CameraCapture = () => {
-  const [savedImages, setSavedImages] = useState([]); // List of saved images
   const [viewMode, setViewMode] = useState(false); // Toggle between capture and view modes
   const [notification, setNotification] = useState(""); // Notification message
 
-  // Load saved images from Dexie database on component mount
-  useEffect(() => {
-    console.log("Component mounted. Loading saved images...");
-    const loadSavedImages = async () => {
-      const images = await getAllPhotos();
-      console.log("Loaded saved images:", images);
-      setSavedImages(images);
-    };
-
-    loadSavedImages();
-  }, []);
+  // Use useLiveQuery to fetch photos reactively
+  const savedImages = usePhotos() || [];
 
   // Handle capturing an image
   const handleCaptureImage = async () => {
@@ -38,11 +28,6 @@ const CameraCapture = () => {
       // Save the captured image to Dexie database
       await addPhoto(imageData);
 
-      // Update the saved images list
-      const images = await getAllPhotos();
-      console.log("Updated saved images list:", images);
-      setSavedImages(images);
-
       // Show notification
       setNotification("Photo has been taken and saved!");
       setTimeout(() => setNotification(""), 3000); // Clear notification after 3 seconds
@@ -62,11 +47,6 @@ const CameraCapture = () => {
       console.log(`Attempting to delete photo with id: ${id}...`);
       // Delete the image from the Dexie database
       await deletePhoto(id);
-
-      // Update the saved images list
-      const updatedImages = savedImages.filter((photo) => photo.id !== id);
-      console.log("Updated saved images list after deletion:", updatedImages);
-      setSavedImages(updatedImages);
 
       // Show notification
       setNotification("Photo has been deleted!");

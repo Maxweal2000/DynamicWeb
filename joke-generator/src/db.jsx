@@ -1,4 +1,5 @@
 import Dexie from "dexie";
+import { useLiveQuery } from "dexie-react-hooks"; // Import useLiveQuery
 
 // Initialize Dexie database
 export const db = new Dexie("CameraAppDB");
@@ -30,15 +31,7 @@ export const deletePhoto = async (id) => {
   }
 };
 
-// Function to get all photos
-export const getAllPhotos = async () => {
-  try {
-    console.log("Fetching all photos from database...");
-    const photos = await db.photos.toArray();
-    console.log(`Retrieved ${photos.length} photos from database`);
-    return photos;
-  } catch (error) {
-    console.error("Failed to fetch photos:", error);
-    return [];
-  }
+// Function to get all photos reactively using useLiveQuery
+export const usePhotos = () => {
+  return useLiveQuery(() => db.photos.toArray());
 };
