@@ -2,31 +2,15 @@
 
 A fun React-based web app that allows users to add their own jokes, and includes interactive features like location tracking and selfie capture.
 
-# Features
-1. Add, edit, and update user-generated jokes
-2. Store data using localStorage
-3. Get user location via the Geolocation API
-4. Capture selfies using the Camera API
-
-   
-# Using the Application
-1.0 Allow Location Access:
-Grant location access to view your current GPS coordinates.
-
-2.0 submit a Joke:
-enter a question and answer of your joke
-Click the "Submit Joke" button to add a new joke.
-
-3.0 Edit or Delete Jokes:
-
-Edit or delete your saved jokes by selecting them from the list.
-
-Capture a Selfie:
-
-Click "Start Camera" and "Capture Image" to capture a photo using your camera.
+# APP Features
+1.	Add, Edit, and Delete Jokes – Users can submit, modify, and remove their own jokes.
+2.	Local Storage Support – Jokes persist even after refreshing the page
+3.	Geolocation API – Fetches and displays the user's current location.
+4.	Camera API Integration – Allows users to capture selfies directly from the app.
+5.	Progressive Web App (PWA) – Installable on both desktop and mobile.
 
 
-# Installation guide and starting up on Vscode 
+# Git Installation and use guide 
 1. Install Node.js
 
 Download and install Node.js (Recommended: LTS version).
@@ -48,20 +32,29 @@ Run the following command to start the app:
 
 This will launch the application in your browser.
 
+   
+# Using the Application
+1.0 Allow Location Access:
+Grant location access to view your current GPS coordinates.
 
+2.0 submit a Joke:
+enter a question and answer of your joke
+Click the "Submit Joke" button to add a new joke.
 
-# Installation of the PWA mobile app joke-generator 
+3.0 Edit or Delete Jokes:
+
+Edit or delete your saved jokes by selecting them from the list.
+
+Capture a Selfie:
+
+Click "Start Camera" and "Capture Image" to capture a photo using your camera.
+
+# Installing Guide PWA application
 
 A fun React-based web app that allows users to add their own jokes, with interactive features like location tracking and selfie capture.
 You can access the application here:
 https://jokegenerator-three.vercel.app/
 
-# Features
-1.	Add, Edit, and Delete Jokes – Users can submit, modify, and remove their own jokes.
-2.	Local Storage Support – Jokes persist even after refreshing the page
-3.	Geolocation API – Fetches and displays the user's current location.
-4.	Camera API Integration – Allows users to capture selfies directly from the app.
-5.	Progressive Web App (PWA) – Installable on both desktop and mobile.
 
 # Installing the Application as a PWA
 # On Mobile (Android - Chrome Browser):
@@ -69,6 +62,15 @@ https://jokegenerator-three.vercel.app/
 2.	Tap the three-dot menu (⋮) in the top-right corner.
 3.	Select "Add to Home screen."
 4.	Tap "Install" – the app will now be available on your home screen!
+
+
+# APP Features
+1.	Add, Edit, and Delete Jokes – Users can submit, modify, and remove their own jokes.
+2.	Local Storage Support – Jokes persist even after refreshing the page
+3.	Geolocation API – Fetches and displays the user's current location.
+4.	Camera API Integration – Allows users to capture selfies directly from the app.
+5.	Progressive Web App (PWA) – Installable on both desktop and mobile.
+
 
 
 # Conclusion
